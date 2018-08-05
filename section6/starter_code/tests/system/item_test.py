@@ -65,13 +65,31 @@ class ItemTest(BaseTest):
                 self.assertDictEqual({'message': "An item with name 'test' already exists."}, json.loads(resp.data))
 
     def test_put_item(self): # put item that does not exist
-        pass
+        with self.app() as client:
+            with self.app_context():
+                StoreModel('test').save_to_db()
+                resp = client.put('/item/test', data={'price': 19.99, 'store_id': 1})
+                self.assertEqual(resp.status_code, 200)
+                self.assertDictEqual({'name':'test', 'price':19.99}, json.loads(resp.data))
 
     def test_put_update_item(self): # update existing item
-        pass
+        with self.app() as client:
+            with self.app_context():
+                StoreModel('test').save_to_db()
+                ItemModel('test', 19.99, 1).save_to_db()
+                self.assertEqual(ItemModel.find_by_name('test').price, 19.99)
+                resp = client.put('/item/test', data={'price': 29.99, 'store_id': 1})
+                self.assertEqual(resp.status_code, 200)
+                self.assertDictEqual({'name': 'test', 'price': 29.99}, json.loads(resp.data))
 
     def test_item_list(self):
-        pass
+        with self.app() as client:
+            with self.app_context():
+                StoreModel('test').save_to_db()
+                ItemModel('test', 19.99, 1).save_to_db()
+                resp = client.get('/items')
+                self.assertDictEqual({'items': [{'name': 'test', 'price': 19.99}]}, json.loads(resp.data))
+
 
 
 
